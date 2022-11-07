@@ -165,34 +165,28 @@ function Question({ idx, kr, en, onChange }: any) {
 
 function Main() {
   const scrollBoxRef = useRef<HTMLUListElement>();
-  const [scriptName, setScriptName] = useState<string>('');
   const [data, setData] = useState<any>([]);
-  const getData = (name: string) => {
-    console.log(`xxxxscript/${name}.json`);
-    fetch(`script/${name}.json`, {
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    })
-      .then(function (response) {
-        return response.json();
-      })
-      .then(function (myJson) {
-        setData(myJson);
-      });
-  };
+  // const getData = (name: string) => {
+  //   fetch(`script/${name}.json`, {
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //       Accept: 'application/json',
+  //     },
+  //   })
+  //     .then(function (response) {
+  //       return response.json();
+  //     })
+  //     .then(function (myJson) {
+  //       setData(myJson);
+  //     });
+  // };
 
   // 내가 공부한 자료
   const [studiedData, setStudiedData] = useState<any>({});
 
-  function loadData(){
-    const _scriptName:string|null = localStorage.getItem('scriptName');
-    if(_scriptName){
-      setScriptName(_scriptName);
-      getData(_scriptName);
-      setStudiedData(JSON.parse(localStorage.getItem(`${_scriptName}-data`) || '{}'));
-    }
+  function loadData() {
+    setData(JSON.parse(localStorage.getItem('script') || '{}'));
+    setStudiedData(JSON.parse(localStorage.getItem('answer') || '{}'));
   }
 
   useEffect(() => {
@@ -248,14 +242,50 @@ function Main() {
     setTabId(newValue);
   };
 
+  const [scriptData, setScriptData] = useState<string>('');
   const [rawStudiedData, setRawStudiedData] = useState<string>('');
-  const handleSave = (type:string) => {
-    if(type ==='ScriptName'){
-      localStorage.setItem('scriptName', scriptName);
-    } else if(type ==='StudiedData'){
-      localStorage.setItem(`${scriptName}-data`, rawStudiedData);
+  const handleSave = (type: string) => {
+    if (type === 'ScriptData') {
+      localStorage.setItem('script', scriptData);
+    } else if (type === 'StudiedData') {
+      localStorage.setItem(`answer`, rawStudiedData);
     }
     loadData();
+  };
+
+  const fileInput1: any = React.useRef(null);
+  const fileInput2: any = React.useRef(null);
+
+  const handleButtonClick1 = (e: any) => {
+    fileInput1.current?.click();
+  };
+  const handleButtonClick2 = (e: any) => {
+    fileInput2.current?.click();
+  };
+
+  const handleChange1 = (e: any) => {
+    console.log(e.target.files[0]);
+    console.log(URL.createObjectURL(e.target.files[0]));
+    let fileReader = new FileReader();
+    fileReader.onload = () => {
+      const fileData: string = fileReader.result as string;
+      // console.log('xxxx',fileData);
+      localStorage.setItem('script', fileData);
+      loadData();
+    };
+    fileReader.readAsText(e.target.files[0]);
+  };
+  const handleChange2 = (e: any) => {
+    console.log(e.target.files[0]);
+    console.log(URL.createObjectURL(e.target.files[0]));
+    let fileReader = new FileReader();
+    fileReader.onload = () => {
+      const fileData: string = fileReader.result as string;
+      // console.log('xxxx',fileData);
+      localStorage.setItem('answer', fileData);
+      loadData();
+    };
+    fileReader.readAsText(e.target.files[0]);
   };
 
   return (
@@ -297,27 +327,21 @@ function Main() {
             <Box
               sx={{
                 display: 'flex',
-                flexDirection: 'row',
+                flexDirection: 'column',
                 justifyContent: 'space-between',
                 mt: 2,
                 mx: 2,
               }}
             >
-              <TextField
-                label="스크립트 이름"
-                value={scriptName}
-                variant="standard"
-                sx={{ mr: 2 }}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                  setScriptName(event.target.value);
-                }}
-              />
-              <Button onClick={(e) => handleSave('ScriptName')}>이름저장</Button>
+              <Button onClick={handleButtonClick1}>스크립트 업로드</Button>
+              <Button onClick={handleButtonClick2}>답변 업로드</Button>
+              <input type="file" ref={fileInput1} onChange={(e: any) => handleChange1(e)} style={{ display: 'none' }} />
+              <input type="file" ref={fileInput2} onChange={(e: any) => handleChange2(e)} style={{ display: 'none' }} />
             </Box>
             <Box
               sx={{
                 display: 'flex',
-                flexDirection: 'row',
+                flexDirection: 'column',
                 justifyContent: 'space-between',
                 mt: 2,
                 mx: 2,
@@ -326,15 +350,17 @@ function Main() {
               <TextField
                 multiline
                 fullWidth
-                label="스터디 내용"
+                label="대답"
                 variant="standard"
                 value={rawStudiedData}
-                sx={{ mr: 2}}
+                sx={{ mr: 2 }}
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                   setRawStudiedData(event.target.value);
                 }}
               />
-              <Button sx={{flexBasis:'72px'}} onClick={(e) => handleSave('StudiedData')}>내용저장</Button>
+              <Button sx={{ flexBasis: '72px' }} onClick={(e) => handleSave('StudiedData')}>
+                대답저장
+              </Button>
             </Box>
           </CardContent>
         </Card>
@@ -360,7 +386,7 @@ function Main() {
             setLine(+event.target.value);
           }}
         />
-        <Chip avatar={<Avatar>{studiedMaxLine}</Avatar>} label="studied" />
+        <Chip avatar={<Avatar>{studiedMaxLine}</Avatar>} label="studied" onClick={(e) => {setPrevData(data.slice(0, studiedMaxLine));setLine(studiedMaxLine)}} />
         <Chip label="copy" onClick={(e) => handleCopy()} />
         <Chip label="next" onClick={(e) => handleNext()} />
       </Box>
