@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Box, Button, TextField, Paper, Typography, Chip, Avatar } from '@mui/material';
+import { Box, Button, TextField, Paper, Typography, Chip, Avatar, useMediaQuery, Divider } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import copy from 'copy-to-clipboard';
 
 function Question({ idx, kr, en, onChange }: any) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [hints, setHints] = useState<string[]>([]);
   const [hintStep, setHintStep] = useState<number>(0);
   const [text, setText] = useState('');
@@ -45,9 +48,10 @@ function Question({ idx, kr, en, onChange }: any) {
       <Box
         sx={{
           display: 'flex',
-          flexDirection: 'row',
+          flexDirection: `${isMobile ? 'column' : 'row'}`,
           justifyContent: 'center',
           mt: 2,
+          mx: isMobile ? 2 : 0,
         }}
       >
         <TextField
@@ -59,9 +63,10 @@ function Question({ idx, kr, en, onChange }: any) {
           InputProps={{
             readOnly: true,
           }}
-          sx={{ mr: 2 }}
+          sx={isMobile ? { mr: 5 } : { mr: 2 }}
           required
         />
+        {isMobile && <Box sx={{ mt: 2 }} />}
         <TextField
           fullWidth
           multiline
@@ -76,26 +81,14 @@ function Question({ idx, kr, en, onChange }: any) {
       <Box
         sx={{
           display: 'flex',
-          flexDirection: 'row',
+          flexDirection: `${isMobile ? 'column' : 'row'}`,
           justifyContent: 'space-between',
-          p: 1,
-          m: 1,
+          mx: isMobile ? 2 : 0,
+          // p: 1,
+          // m: 1,
         }}
       >
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            p: 1,
-            m: 1,
-            flexBasis: '100%',
-          }}
-        >
-          <Button onClick={(e) => handleNextHint()}>Hint</Button>
-          <Button onClick={(e) => handleAllHint()}>All hint</Button>
-          <Button onClick={(e) => handleClearHint()}>Clear</Button>
-        </Box>
+        {isMobile && <Box sx={{ mt: 2 }} />}
         <TextField
           fullWidth
           multiline
@@ -106,9 +99,31 @@ function Question({ idx, kr, en, onChange }: any) {
             setText(event.target.value);
             handleChange(event.target.value);
           }}
-          sx={{ ml: 2 }}
+          sx={isMobile ? { mr: 5 } : { mr: 2 }}
+          // sx={{ ml: 2 }}
           required
         />
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            // p: 1,
+            // m: 1,
+            flexBasis: '100%',
+            verticalAlign: 'bottom',
+          }}
+        >
+          <Button sx={{ mt: 2 }} onClick={(e) => handleNextHint()}>
+            Hint
+          </Button>
+          <Button sx={{ mt: 2 }} onClick={(e) => handleAllHint()}>
+            All hint
+          </Button>
+          <Button sx={{ mt: 2 }} onClick={(e) => handleClearHint()}>
+            Clear
+          </Button>
+        </Box>
       </Box>
     </>
   );
