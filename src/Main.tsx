@@ -11,9 +11,7 @@ import {
   Tab,
   Tabs,
   Card,
-  CardHeader,
   CardContent,
-  CardActions,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import copy from 'copy-to-clipboard';
@@ -56,7 +54,6 @@ function Question({ idx, kr, en, onChange }: any) {
   }, [en]);
 
   function handleChange(text: string) {
-    localStorage.setItem(idx, text);
     setText(text);
     onChange(text);
   }
@@ -186,7 +183,9 @@ function Main() {
 
   function loadData() {
     setData(JSON.parse(localStorage.getItem('script') || '{}'));
-    setStudiedData(JSON.parse(localStorage.getItem('answer') || '{}'));
+    const _studiedData = JSON.parse(localStorage.getItem('answer') || '{}');
+    setStudiedData(_studiedData);
+    studiedMaxLine.current = +Object.keys(_studiedData).reduce((a, b) => (+a > +b ? a : b), '0');
   }
 
   useEffect(() => {
@@ -225,15 +224,17 @@ function Main() {
       scrollBoxRef.current.scrollTop = scrollBoxRef.current.scrollHeight;
     }
   };
+
   useEffect(() => {
     scrollToBottom();
   }, [prevData]);
 
   // 공부했던 가장 마지막 라인
-  const [studiedMaxLine, setStudiedMaxLine] = useState<number>(0);
+  const studiedMaxLine = useRef<number>(0);
+  // const [studiedMaxLine, setStudiedMaxLine] = useState<number>(0);
   useEffect(() => {
     try {
-      setStudiedMaxLine(+Object.keys(studiedData).reduce((a, b) => (+a > +b ? a : b)));
+      studiedMaxLine.current = +Object.keys(studiedData).reduce((a, b) => (+a > +b ? a : b),'0');
     } catch {}
   }, [studiedData]);
 
@@ -242,7 +243,7 @@ function Main() {
     setTabId(newValue);
   };
 
-  const [scriptData, setScriptData] = useState<string>('');
+  const [scriptData, ] = useState<string>('');
   const [rawStudiedData, setRawStudiedData] = useState<string>('');
   const handleSave = (type: string) => {
     if (type === 'ScriptData') {
@@ -253,37 +254,30 @@ function Main() {
     loadData();
   };
 
-  const fileInput1: any = React.useRef(null);
-  const fileInput2: any = React.useRef(null);
+  const scriptFileInput: any = React.useRef(null);
+  const answerFileInput: any = React.useRef(null);
 
-  const handleButtonClick1 = (e: any) => {
-    fileInput1.current?.click();
+  const handleScriptButtonClick = (e: any) => {
+    scriptFileInput.current?.click();
   };
-  const handleButtonClick2 = (e: any) => {
-    fileInput2.current?.click();
+  const handleAnswerButtonClick = (e: any) => {
+    answerFileInput.current?.click();
   };
 
-  const handleChange1 = (e: any) => {
-    console.log(e.target.files[0]);
-    console.log(URL.createObjectURL(e.target.files[0]));
+  const handleFileChange = (e: any, type:string) => {
     let fileReader = new FileReader();
-    fileReader.onload = () => {
+    fileReader.onload = async () => {
       const fileData: string = fileReader.result as string;
-      // console.log('xxxx',fileData);
-      localStorage.setItem('script', fileData);
+      if(type === 'script'){
+        localStorage.setItem('script', fileData);
+        scriptFileInput.current.value = null;
+      }else{
+        localStorage.setItem('answer', fileData);
+        answerFileInput.current.value = null;
+      }
       loadData();
-    };
-    fileReader.readAsText(e.target.files[0]);
-  };
-  const handleChange2 = (e: any) => {
-    console.log(e.target.files[0]);
-    console.log(URL.createObjectURL(e.target.files[0]));
-    let fileReader = new FileReader();
-    fileReader.onload = () => {
-      const fileData: string = fileReader.result as string;
-      // console.log('xxxx',fileData);
-      localStorage.setItem('answer', fileData);
-      loadData();
+      setLine(studiedMaxLine.current);
+      setPrevData(data.slice(0, studiedMaxLine.current))
     };
     fileReader.readAsText(e.target.files[0]);
   };
@@ -293,7 +287,6 @@ function Main() {
     const url = window.URL.createObjectURL(
       new Blob([localStorage.getItem('answer')||'']),
     );
-    console.log(url, localStorage.getItem('answer')||'');
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute(
@@ -341,12 +334,7 @@ function Main() {
       </TabPanel>
       <TabPanel value={tabId} index={1}>
         <Card elevation={3}>
-          {/* <CardHeader title="." /> */}
           <CardContent>
-            {/* <Typography variant="body1" component="p">
-              Please enter something. <br />
-            </Typography>
-            <TextField label="content" /> */}
             <Box
               sx={{
                 display: 'flex',
@@ -356,10 +344,10 @@ function Main() {
                 mx: 2,
               }}
             >
-              <Button onClick={handleButtonClick1}>스크립트 업로드</Button>
-              <Button onClick={handleButtonClick2}>답변 업로드</Button>
-              <input type="file" ref={fileInput1} onChange={(e: any) => handleChange1(e)} style={{ display: 'none' }} />
-              <input type="file" ref={fileInput2} onChange={(e: any) => handleChange2(e)} style={{ display: 'none' }} />
+              <Button onClick={handleScriptButtonClick}>스크립트 업로드</Button>
+              <Button onClick={handleAnswerButtonClick}>답변 업로드</Button>
+              <input type="file" ref={scriptFileInput} onChange={(e: any) => handleFileChange(e, 'script')} style={{ display: 'none' }} />
+              <input type="file" ref={answerFileInput} onChange={(e: any) => handleFileChange(e, 'answer')} style={{ display: 'none' }} />
             </Box>
             <Box
               sx={{
@@ -389,7 +377,6 @@ function Main() {
         </Card>
       </TabPanel>
 
-      {/* current line, 완료된 라인 */}
       <Box
         sx={{
           display: 'flex',
@@ -409,7 +396,7 @@ function Main() {
             setLine(+event.target.value);
           }}
         />
-        <Chip avatar={<Avatar>{studiedMaxLine}</Avatar>} label="studied" onClick={(e) => {setPrevData(data.slice(0, studiedMaxLine));setLine(studiedMaxLine)}} />
+        <Chip avatar={<Avatar>{studiedMaxLine.current}</Avatar>} label="studied" onClick={(e) => {setPrevData(data.slice(0, studiedMaxLine.current));setLine(studiedMaxLine.current)}} />
         <Chip label="copy" onClick={(e) => handleCopy()} />
         <Chip label="download" onClick={(e) => handleDownload()} />
         <Chip label="next" onClick={(e) => handleNext()} />
