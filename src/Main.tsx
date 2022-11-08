@@ -212,12 +212,12 @@ function Main() {
     answer[line] = text;
     const answerList = { ...studiedData, ...answer };
     setStudiedData(answerList);
-    localStorage.setItem('eng', JSON.stringify(answerList));
+    localStorage.setItem('answer', JSON.stringify(answerList));
     setText('');
   }
 
   function handleCopy() {
-    copy(localStorage.getItem('eng') || '{}');
+    copy(localStorage.getItem('answer') || '{}');
   }
 
   const scrollToBottom = () => {
@@ -286,6 +286,29 @@ function Main() {
       loadData();
     };
     fileReader.readAsText(e.target.files[0]);
+  };
+
+  const handleDownload = () => {
+    // https://www.folkstalk.com/2022/07/react-js-download-file-with-code-examples.html
+    const url = window.URL.createObjectURL(
+      new Blob([localStorage.getItem('answer')||'']),
+    );
+    console.log(url, localStorage.getItem('answer')||'');
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute(
+      'download',
+      `answer.txt`,
+    );
+
+    // Append to html link element page
+    document.body.appendChild(link);
+
+    // Start download
+    link.click();
+
+    // Clean up and remove the link
+    link.parentNode?.removeChild(link);
   };
 
   return (
@@ -388,6 +411,7 @@ function Main() {
         />
         <Chip avatar={<Avatar>{studiedMaxLine}</Avatar>} label="studied" onClick={(e) => {setPrevData(data.slice(0, studiedMaxLine));setLine(studiedMaxLine)}} />
         <Chip label="copy" onClick={(e) => handleCopy()} />
+        <Chip label="download" onClick={(e) => handleDownload()} />
         <Chip label="next" onClick={(e) => handleNext()} />
       </Box>
       {data && data.length > 0 && (
