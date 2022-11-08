@@ -181,13 +181,19 @@ function Main() {
   // 내가 공부한 자료
   const [studiedData, setStudiedData] = useState<any>({});
 
+  const [studiedMaxCount, setStudiedMaxCount] = useState<number>(0);
+  function setStudiedMaxLine(count: number) {
+    studiedMaxLine.current = count;
+    setStudiedMaxCount(count);
+  }
+
   function loadData() {
     const _data = JSON.parse(localStorage.getItem('script') || '[]');
     setData(_data);
     const _studiedData = JSON.parse(localStorage.getItem('answer') || '{}');
     setStudiedData(_studiedData);
 
-    studiedMaxLine.current = +Object.keys(_studiedData).reduce((a, b) => (+a > +b ? a : b), '0');
+    setStudiedMaxLine(+Object.keys(_studiedData).reduce((a, b) => (+a > +b ? a : b), '0'));
     setLine(studiedMaxLine.current);
     setPrevData(_data.slice(0, studiedMaxLine.current));
   }
@@ -238,7 +244,7 @@ function Main() {
   // const [studiedMaxLine, setStudiedMaxLine] = useState<number>(0);
   useEffect(() => {
     try {
-      studiedMaxLine.current = +Object.keys(studiedData).reduce((a, b) => (+a > +b ? a : b), '0');
+      setStudiedMaxLine(+Object.keys(studiedData).reduce((a, b) => (+a > +b ? a : b), '0'));
     } catch {}
   }, [studiedData]);
 
@@ -416,7 +422,7 @@ function Main() {
           }}
         />
         <Chip
-          avatar={<Avatar>{studiedMaxLine.current}</Avatar>}
+          avatar={<Avatar>{studiedMaxCount}</Avatar>}
           label="studied"
           onClick={(e) => {
             setPrevData(data.slice(0, studiedMaxLine.current));
