@@ -12,6 +12,8 @@ import {
   Tabs,
   Card,
   CardContent,
+  Alert,
+  Collapse,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import copy from 'copy-to-clipboard';
@@ -161,6 +163,7 @@ function Question({ idx, kr, en, onChange }: any) {
 }
 
 function Main() {
+  const [alertOpen, setAlertOpen] = React.useState(false);
   const scrollBoxRef = useRef<HTMLUListElement>();
   const [data, setData] = useState<any>([]);
   // const getData = (name: string) => {
@@ -210,6 +213,12 @@ function Main() {
   const [line, setLine] = useState<number>(0);
   const [prevData, setPrevData] = useState<any>([]);
   function handleNext() {
+    console.log(data.length, line);
+    if (data.length <= line) {
+      setAlertOpen(true);
+      return;
+    }
+    console.log(data.length);
     const nextLine = line + 1;
     setLine(nextLine);
     setPrevData(data.slice(0, nextLine));
@@ -434,6 +443,11 @@ function Main() {
       {data && data.length > 0 && (
         <Question idx={data[line]?.idx} en={data[line]?.en} kr={data[line]?.kr} onChange={handleChange} />
       )}
+      <Collapse in={alertOpen}>
+        <Alert severity="warning" onClose={() => {setAlertOpen(false);}}>
+          마지막 라인입니다!!
+        </Alert>
+      </Collapse>
       <Box
         sx={{
           display: 'flex',
